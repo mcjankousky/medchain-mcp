@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  # Neo4j Database Service
+  # Live Production/Dev Database
   neo4j:
     image: neo4j:5.12.0-community
     container_name: medchain_neo4j
     ports:
-      - "7474:7474" # Browser UI
-      - "7687:7687" # Bolt protocol
+      - "7474:7474"
+      - "7687:7687"
     environment:
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
     healthcheck:
@@ -16,7 +16,22 @@ services:
       timeout: 5s
       retries: 5
 
-  # Python Application & Execution Environment
+  # NEW: Isolated Integration Testing Database
+  neo4j_test:
+    image: neo4j:5.12.0-community
+    container_name: medchain_neo4j_test
+    ports:
+      - "7475:7474" # Accessible on host via port 7475
+      - "7688:7687" # Bolt connection on port 7688
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Python Application Runtime Environment
   app:
     build: .
     container_name: medchain_app
@@ -27,7 +42,11 @@ services:
       - NEO4J_URI=${NEO4J_URI}
       - NEO4J_USER=${NEO4J_USER}
       - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      # Inject the test database location explicitly into the container
+      - NEO4J_TEST_URI=bolt://neo4j_test:7687 
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
       neo4j:
+        condition: service_healthy
+      neo4j_test:
         condition: service_healthy
