@@ -1,0 +1,26 @@
+================================================================================
+MASTER FULFILLMENT AGREEMENT -- OMNIHEALTH HOSPITAL SYSTEM
+================================================================================
+This agreement is entered into effective June 1st, 2026, between OmniHealth Corp
+and Medtronic Inc. (hereafter referred to as the Supplier). Under this contract,
+Supplier agrees to maintain standard fulfillment parameters for the following
+clinical asset categories under UNSPSC commodity code 42142611.
+
+Clinical Device Specifications:
+- Device ID Variant: DEV-SYRINGE-3ML
+- Clinical Common Name: 3ml Safety Syringe
+- Description: Standard 3cc medical syringe with integrated safety luer-lock tip.
+
+Logistics Packaging and Packaging Breakdown:
+The primary physical asset traded under this agreement shall be cataloged under
+item identifier GTIN-100234, representing our standard sterile box of 50 units.
+The contracted baseline pricing is negotiated at $14.50 USD per unit box. 
+
+Due to recent global freight lane constraints, Stryker Corporation logistics
+subsidiaries may act as secondary transit partners. For products falling under
+this alternate distribution channel, a standard shipping buffer will adjust the 
+expected default distribution lead time out to an estimated 3 days.
+
+Authorized Corporate Signatory:
+Medtronic, LLC -- Global Supply Division
+================================================================================

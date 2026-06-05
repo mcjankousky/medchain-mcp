@@ -1,0 +1,21 @@
+{
+  "catalog_metadata": {
+    "publisher": "Baxter Healthcare Corp.",
+    "effective_year": 2026,
+    "un_standard_code": "42142611"
+  },
+  "published_items": [
+    {
+      "clinical_id": "DEV-INFUSION-PUMP",
+      "common_name": "Standard Volumetric Infusion Pump",
+      "specifications": "Dual-channel intravenous fluid delivery system with error reduction software.",
+      "skus": [
+        {
+          "sku_number": "GTIN-888441",
+          "contract_price": 1250.00,
+          "logistics_lead_days": 10
+        }
+      ]
+    }
+  ]
+}

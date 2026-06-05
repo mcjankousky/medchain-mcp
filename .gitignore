@@ -1,0 +1,13 @@
+# Secrets and environment configurations
+.env
+.env.*
+
+# Python environments
+/opt/venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# OS specific files
+.DS_Store
