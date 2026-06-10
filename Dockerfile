@@ -13,10 +13,13 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install the Neo4j driver (and any future requirements)
-RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir neo4j>=5.14.0 pydantic==2.6.4 rapidfuzz==3.6.2 google-genai~=0.1.0
+RUN pip install --no-cache-dir --upgrade pip
 
-#Install requirements for testing
-RUN pip install --no-cache-dir pytest==8.1.1
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the strictly pinned top-level dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the local application source code into the container
 COPY . /app/

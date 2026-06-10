@@ -1,0 +1,13 @@
+# --- Core Graph Database ---
+neo4j==6.2.0
+
+# --- Data Validation and Resolution ---
+pydantic==2.13.4
+RapidFuzz==3.14.5
+
+# --- LLM and Agentic Protocols ---
+google-genai==2.8.0
+fastmcp==3.4.2
+
+# --- Testing ---
+pytest==8.1.1

@@ -1,48 +1,45 @@
 import os
 import sys
+import json
 from google import genai
 from google.genai import types
 from schemas.extraction import SupplyChainExtractionPayload
 from pipeline.preprocessing import resolve_manufacturer_entity
 
 def run_genai_extraction(file_content: str) -> SupplyChainExtractionPayload:
-    """
-    Leverages Gemini's native structured outputs engine to parse unvalidated text,
-    then intercepts and normalizes entity names via our deterministic hybrid layer.
-    """
-    # Enforce that the newly specified Gemini key exists in the environment boundaries
     if "GEMINI_API_KEY" not in os.environ:
         print("CRITICAL CONFIGURATION ERROR: GEMINI_API_KEY environment variable is missing.", file=sys.stderr)
         sys.exit(1)
 
-    # Initialize the modern Google GenAI Client
-    client = genai.Client()
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     
+    # 1. Dump our Pydantic structure to a string so Gemini knows exactly what to return
+    schema_instructions = json.dumps(SupplyChainExtractionPayload.model_json_schema(), indent=2)
+
+    # 2. Inject the schema directly into the system prompt
     system_instruction = (
         "You are an expert healthcare supply chain ontology analyst. "
         "Analyze the provided document text and extract all entities exactly "
         "matching the requested schema format. Generate distinct slug IDs "
-        "for generic medical devices based closely on their functional definitions."
+        "for generic medical devices based closely on their functional definitions.\n\n"
+        f"You MUST return valid JSON that perfectly matches this JSON Schema:\n{schema_instructions}"
     )
 
-    # Execute the structured content generation call using gemini-1.5-flash
     response = client.models.generate_content(
-        model='gemini-1.5-flash',
+        model='gemini-2.5-flash',
         contents=f"<document>\n{file_content}\n</document>",
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
-            # Force the model to respond matching our exact Pydantic structural schema
-            response_mime_type="application/json",
-            response_schema=SupplyChainExtractionPayload,
-            temperature=0.1, # Keep creativity low for structural parsing
+            # Force JSON output, but bypass the SDK's buggy response_schema parser
+            response_mime_type="application/json", 
+            temperature=0.1, 
         ),
     )
 
-    # The SDK automatically binds and returns the response parsed into our Pydantic class
-    parsed_payload: SupplyChainExtractionPayload = response.parsed
+    # 3. Manually parse and validate the raw JSON text string into our Pydantic model
+    parsed_payload = SupplyChainExtractionPayload.model_validate_json(response.text)
 
     # --- CRITICAL HYBRID NORMALIZATION PASSTHROUGH ---
-    # Intercept stochastic strings and map them deterministically before database hydration
     for mfr in parsed_payload.manufacturers:
         resolved_id = resolve_manufacturer_entity(mfr.name)
         if resolved_id:
