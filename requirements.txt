@@ -11,3 +11,4 @@ fastmcp==3.4.2
 
 # --- Testing ---
 pytest==8.1.1
+typer>=0.9.0

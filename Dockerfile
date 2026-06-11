@@ -1,6 +1,14 @@
 # Use an official lightweight Python image
 FROM python:3.12-slim
 
+# 1. Update package lists and install Node.js + npm
+RUN apt-get update && \
+    apt-get install -y nodejs npm && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Globally install the MCP Inspector to prevent runtime downloads
+RUN npm install -g @modelcontextprotocol/inspector
+
 # Set environment variables to prevent Python from writing .pyc files and buffering stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

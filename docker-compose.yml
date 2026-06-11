@@ -45,6 +45,7 @@ services:
       # Inject the test database location explicitly into the container
       - NEO4J_TEST_URI=bolt://neo4j_test:7687 
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PYTHONPATH=/app
     depends_on:
       neo4j:
         condition: service_healthy
