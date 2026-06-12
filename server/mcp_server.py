@@ -15,6 +15,24 @@ except Exception as e:
     sys.exit(1)
 
 
+# --- MCP TOOL 0: SYSTEM HEALTH CHECK ---
+
+@mcp.tool()
+def get_graph_status() -> str:
+    """
+    A foundational health-check tool. Use this to verify the MCP server 
+    can successfully read from the underlying Neo4j supply chain database.
+    """
+    try:
+        with repo.driver.session() as session:
+            # Execute a safe, read-only Cypher query to count the total nodes
+            result = session.run("MATCH (n) RETURN count(n) as node_count")
+            count = result.single()["node_count"]
+            return f"MedChain Graph is fully operational. Total nodes currently in ontology: {count}"
+    except Exception as e:
+        return f"Database read error: {str(e)}"
+
+
 # --- MCP TOOL 1: CLINICAL PRODUCT ALTERNATIVES ---
 
 @mcp.tool()
@@ -102,21 +120,22 @@ def get_product_alternatives(sku_id: str) -> str:
 # --- MCP TOOL 2: SUPPLY CHAIN TOPOLOGY MAPPING ---
 
 @mcp.tool()
-def query_supply_chain_topology(manufacturer_id: str) -> str:
+def query_supply_chain_topology(company_name: str) -> str:
     """
     Maps out localized supply chain network nodes for a vendor entity to identify systemic dependency risks.
     Returns all medical equipment classifications, items, and SKUs reliant on this specific company.
     
     Args:
-        manufacturer_id: The clean, unique normalized ID of the target company (e.g., 'MFR-MEDTRONIC').
+        company_name: The name of the manufacturer to search for (e.g., 'Medtronic', 'Stryker').
     """
-    # Force uppercase formatting to maintain alignment with our Phase 2 resolution engine normalization rules
-    mfr_id = manufacturer_id.strip().upper()
-    if not mfr_id.startswith("MFR-"):
-        mfr_id = f"MFR-{mfr_id}"
+    # Clean the input but don't force a brittle prefix
+    search_term = company_name.strip()
         
+    # Use Cypher's string functions to do a case-insensitive, fuzzy match!
     query = """
-    MATCH (mfr:Manufacturer {id: $mfr_id})<-[:MANUFACTURED_BY]-(dev:MedicalDevice)
+    MATCH (mfr:Manufacturer)<-[:MANUFACTURED_BY]-(dev:MedicalDevice)
+    WHERE toLower(mfr.name) CONTAINS toLower($search_term) 
+       OR toLower(mfr.id) CONTAINS toLower($search_term)
     MATCH (dev)-[:HAS_SKU]->(sku:SKU)
     MATCH (dev)-[:BELONGS_TO_CATEGORY]->(cat:UNSPSC_Category)
     RETURN mfr.name as company_name,
@@ -130,14 +149,14 @@ def query_supply_chain_topology(manufacturer_id: str) -> str:
     
     try:
         with repo.driver.session() as session:
-            result = session.run(query, mfr_id=mfr_id)
+            result = session.run(query, search_term=search_term)
             records = list(result)
             
             if not records:
-                return f"ℹ️ Supplier Analysis: No active product dependencies mapped to manufacturer ID '{mfr_id}'."
+                return f"ℹ️ Supplier Analysis: No active product dependencies mapped to any manufacturer matching '{search_term}'."
                 
-            company_name = records[0]["company_name"]
-            output = f"🏭 STRATEGIC TOPOLOGY REPORT FOR: {company_name} ({mfr_id})\n"
+            matched_company = records[0]["company_name"]
+            output = f"🏭 STRATEGIC TOPOLOGY REPORT FOR: {matched_company}\n"
             output += f"Total vulnerable product tracks monitored: {len(records)}\n"
             output += "------------------------------------------------------------------------\n"
             
