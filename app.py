@@ -1,5 +1,7 @@
 import streamlit as st
 import time
+import asyncio
+import traceback
 from database.graph_repository import GraphRepository
 from client import run_supply_chain_agent
 
@@ -50,24 +52,33 @@ with col2:
 
 # --- Execution Logic ---
 if simulate_btn:
-    monologue_container.warning(f"Thinking: Alert received. {selected_mfr} is offline. Querying graph topology...")
+    # 1. Prepare the UI
+    monologue_container.empty()
     report_container.empty()
     
-    # Placeholder for the actual Agent Execution Loop
-    time.sleep(1.5)
-    
-    monologue_container.warning("Thinking: Discovered vulnerable SKUs. Now checking POTENTIAL_SUBSTITUTE_FOR edges...")
-    time.sleep(1.5)
-    
-    monologue_container.success("Task Complete. Rendering report.")
-    
-    # Placeholder for the final Agent Output
-    mock_report = f"""
-    ### Outage Impact: {selected_mfr}
-    * **Vulnerable SKU:** GTIN-100234 (3ml Safety Syringe)
-    * **Price:** $14.50
-    
-    ### Recommended Alternatives
-    Based on UNSPSC classification (42142611), the graph suggests investigating alternative regional suppliers.
-    """
-    report_container.markdown(mock_report)
+    # 2. Create a callback function to update the Streamlit UI live
+    def update_ui_status(message: str):
+        # We use a markdown box to append new thoughts to the monologue
+        with monologue_container:
+            st.info(message)
+            
+    # 3. Trigger the Agent
+    with st.spinner("Agent is actively navigating the Knowledge Graph..."):
+        try:
+            # We use asyncio.run to execute the async agent from sync Streamlit
+            final_report = asyncio.run(
+                run_supply_chain_agent(
+                    target_manufacturer=selected_mfr, 
+                    status_callback=update_ui_status
+                )
+            )
+            
+            # 4. Render the final output
+            monologue_container.success("Task Complete. Strategy finalized.")
+            report_container.markdown(final_report)
+            
+        except Exception as e:
+            st.error(f"Agent Execution Failed: {str(e)}")
+            # Dump the actual error stack to the Streamlit UI!
+            with st.expander("🔍 View Full Traceback"):
+                st.code(traceback.format_exc())
