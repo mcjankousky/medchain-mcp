@@ -86,7 +86,7 @@ async def run_supply_chain_agent(target_manufacturer: str, status_callback=None)
                 status_callback(f"🧠 Prompting Gemini to resolve {target_manufacturer} crisis...")
 
             # Create a chat session to maintain conversation history
-            chat = client.chats.create(model="gemini-2.5-flash", config=config)
+            chat = client.chats.create(model="gemini-3.1-flash-lite", config=config)
             response = chat.send_message(prompt)
 
             # While the AI decides it needs to use a tool, keep intercepting and executing
