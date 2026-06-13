@@ -25,6 +25,7 @@ services:
     ports:
       - "7475:7474" # Accessible on host via port 7475
       - "7688:7687" # Bolt connection on port 7688
+      - "8502:8501"
     environment:
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
     healthcheck:
@@ -37,6 +38,9 @@ services:
   app:
     build: .
     container_name: medchain_app
+    ports:
+      - "8501:8501"
+    command: tail -f /dev/null
     volumes:
       - .:/app
     tty: true

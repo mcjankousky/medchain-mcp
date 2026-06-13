@@ -13,3 +13,6 @@ fastmcp==3.4.2
 pytest==8.1.1
 pytest-asyncio==0.23.5
 typer>=0.9.0
+
+# --- Front end Stakeholder interface ---
+streamlit==1.58.0
